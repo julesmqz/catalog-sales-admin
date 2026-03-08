@@ -16,9 +16,22 @@ const handleLogout = async () => {
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col md:flex-row">
     <!-- Mobile Header -->
-    <header class="md:hidden bg-white border-b px-4 py-3 flex justify-between items-center">
-      <h1 class="font-bold text-xl">Catálogo Admin</h1>
-      <button @click="handleLogout" class="text-sm text-red-600 font-medium">Salir</button>
+    <header class="md:hidden bg-white border-b px-4 py-3 flex flex-col gap-4">
+      <div class="flex justify-between items-center">
+        <h1 class="font-bold text-xl">Catálogo Admin</h1>
+        <button @click="handleLogout" class="text-sm text-red-600 font-medium">Salir</button>
+      </div>
+      <nav class="flex overflow-x-auto pb-2 gap-4 text-sm scrollbar-hide">
+        <NuxtLink 
+          v-for="item in menuItems" 
+          :key="item.path" 
+          :to="item.path"
+          class="whitespace-nowrap px-2 py-1 rounded-md"
+          active-class="bg-blue-50 text-blue-700 font-bold"
+        >
+          {{ item.label }}
+        </NuxtLink>
+      </nav>
     </header>
 
     <!-- Sidebar (Desktop) -->

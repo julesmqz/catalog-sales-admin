@@ -5,6 +5,16 @@ definePageMeta({
 
 const { products, isLoading, error, getAll, create, remove, update } = useProducts()
 
+const searchQuery = ref('')
+
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return products.value
+  const query = searchQuery.value.toLowerCase()
+  return products.value.filter(p => 
+    p.name.toLowerCase().includes(query)
+  )
+})
+
 onMounted(() => {
   getAll()
 })
@@ -68,14 +78,27 @@ const handleDelete = async (id: string) => {
 
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
       <h2 class="text-3xl font-bold">Productos</h2>
-      <button 
-        @click="openCreate"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium"
-      >
-        Nuevo Producto
-      </button>
+      <div class="flex w-full md:w-auto gap-2">
+        <div class="relative flex-1 md:w-64">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Buscar por nombre..." 
+            class="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <button 
+          @click="openCreate"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium whitespace-nowrap"
+        >
+          Nuevo Producto
+        </button>
+      </div>
     </div>
 
     <div v-if="isLoading" class="text-center py-10 text-gray-500">
@@ -86,12 +109,12 @@ const handleDelete = async (id: string) => {
       {{ error }}
     </div>
 
-    <div v-else-if="products.length === 0" class="text-center py-10 text-gray-500 bg-white border rounded-lg">
-      No hay productos registrados.
+    <div v-else-if="filteredProducts.length === 0" class="text-center py-10 text-gray-500 bg-white border rounded-lg">
+      No se encontraron productos.
     </div>
 
     <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <div v-for="product in products" :key="product.id" class="bg-white border rounded-lg overflow-hidden shadow-sm flex flex-col">
+      <div v-for="product in filteredProducts" :key="product.id" class="bg-white border rounded-lg overflow-hidden shadow-sm flex flex-col">
         <div class="h-48 bg-gray-100 flex items-center justify-center">
           <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name" class="h-full w-full object-cover" />
           <div v-else class="text-gray-400">Sin imagen</div>

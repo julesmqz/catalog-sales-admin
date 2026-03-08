@@ -7,6 +7,7 @@ definePageMeta({
 
 const { orders, getAll, isLoading, error } = useOrders()
 const filterStatus = ref<OrderStatus | 'all'>('all')
+const selectedOrderIds = ref<string[]>([])
 
 const statusLabels: Record<OrderStatus, string> = {
   pending: 'Pendiente de pago',
@@ -23,16 +24,63 @@ const statusColors: Record<OrderStatus, string> = {
 }
 
 const filteredOrders = computed(() => {
-  if (filterStatus.value === 'all') return orders.value
-  return orders.value.filter(order => order.status === filterStatus.value)
+  let result = [...orders.value]
+  
+  // Ordenar por fecha desc por defecto
+  result.sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()
+    return dateB - dateA
+  })
+
+  if (filterStatus.value === 'all') return result
+  return result.filter(order => order.status === filterStatus.value)
 })
+
+const isAllSelected = computed(() => {
+  return filteredOrders.value.length > 0 && filteredOrders.value.every(order => selectedOrderIds.value.includes(order.id))
+})
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    const filteredIds = filteredOrders.value.map(o => o.id)
+    selectedOrderIds.value = selectedOrderIds.value.filter(id => !filteredIds.includes(id))
+  } else {
+    const newSelected = [...selectedOrderIds.value]
+    filteredOrders.value.forEach(order => {
+      if (!newSelected.includes(order.id)) {
+        newSelected.push(order.id)
+      }
+    })
+    selectedOrderIds.value = newSelected
+  }
+}
+
+const toggleSelectOrder = (id: string) => {
+  const index = selectedOrderIds.value.indexOf(id)
+  if (index > -1) {
+    selectedOrderIds.value.splice(index, 1)
+  } else {
+    selectedOrderIds.value.push(id)
+  }
+}
+
+const goToSummary = () => {
+  if (selectedOrderIds.value.length === 0) return
+  navigateTo({
+    path: '/orders/summary',
+    query: { ids: selectedOrderIds.value.join(',') }
+  })
+}
 
 const formatDate = (timestamp: any) => {
   if (!timestamp) return ''
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
   return new Intl.DateTimeFormat('es-ES', {
-    dateStyle: 'medium'
-  }).format(date)
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(date).replace('.', '')
 }
 
 onMounted(getAll)
@@ -42,12 +90,21 @@ onMounted(getAll)
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <h2 class="text-3xl font-bold">Pedidos</h2>
-      <NuxtLink 
-        to="/orders/new"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium"
-      >
-        Nuevo Pedido
-      </NuxtLink>
+      <div class="flex gap-2">
+        <button 
+          v-if="selectedOrderIds.length > 0"
+          @click="goToSummary"
+          class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-medium transition-all"
+        >
+          Ver resumen ({{ selectedOrderIds.length }})
+        </button>
+        <NuxtLink 
+          to="/orders/new"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium"
+        >
+          Nuevo Pedido
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -85,6 +142,14 @@ onMounted(getAll)
         <table class="w-full text-left">
           <thead class="bg-gray-50 border-b text-gray-600 uppercase text-xs font-bold">
             <tr>
+              <th class="px-6 py-4 w-10">
+                <input 
+                  type="checkbox" 
+                  :checked="isAllSelected" 
+                  @change="toggleSelectAll"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                >
+              </th>
               <th class="px-6 py-4">Cliente</th>
               <th class="px-6 py-4">Fecha</th>
               <th class="px-6 py-4 text-right">Total</th>
@@ -96,26 +161,33 @@ onMounted(getAll)
             <tr 
               v-for="order in filteredOrders" 
               :key="order.id"
-              @click="navigateTo(`/orders/${order.id}`)"
               class="hover:bg-gray-50 cursor-pointer transition-colors"
             >
-              <td class="px-6 py-4 font-medium text-gray-900">
+              <td class="px-6 py-4" @click.stop>
+                <input 
+                  type="checkbox" 
+                  :checked="selectedOrderIds.includes(order.id)" 
+                  @change="toggleSelectOrder(order.id)"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                >
+              </td>
+              <td class="px-6 py-4 font-medium text-gray-900" @click="navigateTo(`/orders/${order.id}`)">
                 {{ order.customerName }}
               </td>
-              <td class="px-6 py-4 text-sm text-gray-600">
+              <td class="px-6 py-4 text-sm text-gray-600" @click="navigateTo(`/orders/${order.id}`)">
                 {{ formatDate(order.createdAt) }}
               </td>
-              <td class="px-6 py-4 text-right font-bold text-blue-600">
+              <td class="px-6 py-4 text-right font-bold text-blue-600" @click="navigateTo(`/orders/${order.id}`)">
                 ${{ order.total.toFixed(2) }}
               </td>
-              <td class="px-6 py-4">
+              <td class="px-6 py-4" @click="navigateTo(`/orders/${order.id}`)">
                 <div class="flex justify-center">
                   <span :class="['px-2 py-1 rounded-full text-xs font-semibold border', statusColors[order.status]]">
                     {{ statusLabels[order.status] }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-right text-gray-400">
+              <td class="px-6 py-4 text-right text-gray-400" @click="navigateTo(`/orders/${order.id}`)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7" />
                 </svg>

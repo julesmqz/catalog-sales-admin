@@ -5,6 +5,17 @@ definePageMeta({
 
 const { customers, isLoading, error, getAll, create, remove, update } = useCustomers()
 
+const searchQuery = ref('')
+
+const filteredCustomers = computed(() => {
+  if (!searchQuery.value) return customers.value
+  const query = searchQuery.value.toLowerCase()
+  return customers.value.filter(c => 
+    c.name.toLowerCase().includes(query) || 
+    c.phone.includes(query)
+  )
+})
+
 onMounted(() => {
   getAll()
 })
@@ -68,14 +79,27 @@ const handleDelete = async (id: string) => {
 
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
       <h2 class="text-3xl font-bold">Clientes</h2>
-      <button 
-        @click="openCreate"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium"
-      >
-        Nuevo Cliente
-      </button>
+      <div class="flex w-full md:w-auto gap-2">
+        <div class="relative flex-1 md:w-64">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Buscar por nombre o teléfono..." 
+            class="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <button 
+          @click="openCreate"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium whitespace-nowrap"
+        >
+          Nuevo Cliente
+        </button>
+      </div>
     </div>
 
     <div v-if="isLoading" class="text-center py-10 text-gray-500">
@@ -86,8 +110,8 @@ const handleDelete = async (id: string) => {
       {{ error }}
     </div>
 
-    <div v-else-if="customers.length === 0" class="text-center py-10 text-gray-500 bg-white border rounded-lg">
-      No hay clientes registrados.
+    <div v-else-if="filteredCustomers.length === 0" class="text-center py-10 text-gray-500 bg-white border rounded-lg">
+      No se encontraron clientes.
     </div>
 
     <div v-else class="bg-white border rounded-lg overflow-hidden shadow-sm">
@@ -101,7 +125,7 @@ const handleDelete = async (id: string) => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="customer in customers" :key="customer.id" class="border-b hover:bg-gray-50 transition-colors">
+          <tr v-for="customer in filteredCustomers" :key="customer.id" class="border-b hover:bg-gray-50 transition-colors">
             <td class="p-4 text-sm">{{ customer.name }}</td>
             <td class="p-4 text-sm">{{ customer.phone }}</td>
             <td class="p-4 text-sm text-gray-600">{{ customer.address || '-' }}</td>
