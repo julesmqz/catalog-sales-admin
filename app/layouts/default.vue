@@ -5,6 +5,7 @@ const menuItems = [
   { label: 'Dashboard', path: '/' },
   { label: 'Productos', path: '/products' },
   { label: 'Clientes', path: '/customers' },
+  { label: 'Pedidos', path: '/orders' },
 ]
 
 const handleLogout = async () => {
