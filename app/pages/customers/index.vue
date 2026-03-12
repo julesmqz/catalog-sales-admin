@@ -3,7 +3,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { customers, isLoading, error, getAll, create, remove, update } = useCustomers()
+const { customers, isLoading: isCustomersLoading, error, getAll, create, remove, update } = useCustomers()
+const { tenantId } = useAuth()
 
 const searchQuery = ref('')
 
@@ -16,9 +17,9 @@ const filteredCustomers = computed(() => {
   )
 })
 
-onMounted(() => {
-  getAll()
-})
+watch(tenantId, (newId) => {
+  if (newId) getAll()
+}, { immediate: true })
 
 const isDialogOpen = ref(false)
 const isEditing = ref(false)
@@ -102,7 +103,7 @@ const handleDelete = async (id: string) => {
       </div>
     </div>
 
-    <div v-if="isLoading" class="text-center py-10 text-gray-500">
+    <div v-if="isCustomersLoading || !tenantId" class="text-center py-10 text-gray-500">
       Cargando clientes...
     </div>
 

@@ -7,6 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "test": "vitest",
     "deploy": "npm run build && firebase deploy --only hosting",
     "postinstall": "nuxt prepare"
   },
@@ -23,6 +24,11 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^6.14.0"
+    "@nuxt/test-utils": "^4.0.0",
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.8.3",
+    "playwright-core": "^1.58.2",
+    "vitest": "^4.0.18"
   }
 }

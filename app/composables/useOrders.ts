@@ -23,7 +23,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string
-  userId: string
+  tenantId: string
   customerId: string
   customerName: string   // snapshot
   items: OrderItem[]
@@ -35,19 +35,19 @@ export interface Order {
 
 export const useOrders = () => {
   const { $db } = useNuxtApp()
-  const { user } = useAuth()
+  const { tenantId } = useAuth()
   const orders = ref<Order[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   const getAll = async () => {
-    if (!user.value) return
+    if (!tenantId.value) return
     isLoading.value = true
     error.value = null
     try {
       const q = query(
         collection($db, 'orders'), 
-        where('userId', '==', user.value.uid),
+        where('tenantId', '==', tenantId.value),
         orderBy('createdAt', 'desc')
       )
       const querySnapshot = await getDocs(q)
@@ -82,13 +82,13 @@ export const useOrders = () => {
     }
   }
 
-  const create = async (data: Omit<Order, 'id' | 'userId' | 'createdAt'>) => {
-    if (!user.value) throw new Error('User not authenticated')
+  const create = async (data: Omit<Order, 'id' | 'tenantId' | 'createdAt'>) => {
+    if (!tenantId.value) throw new Error('Tenant not identified')
     isLoading.value = true
     try {
       const newOrder: Omit<Order, 'id'> = {
         ...data,
-        userId: user.value.uid,
+        tenantId: tenantId.value,
         createdAt: Timestamp.now()
       }
       const docRef = await addDoc(collection($db, 'orders'), newOrder)

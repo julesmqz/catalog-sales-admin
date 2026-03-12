@@ -8,6 +8,7 @@ definePageMeta({
 const { customers, getAll: fetchCustomers } = useCustomers()
 const { products, getAll: fetchProducts } = useProducts()
 const { create, isLoading } = useOrders()
+const { tenantId } = useAuth()
 const router = useRouter()
 
 const orderData = reactive({
@@ -17,6 +18,13 @@ const orderData = reactive({
   notes: '',
   status: 'pending' as OrderStatus
 })
+
+watch(tenantId, (newId) => {
+  if (newId) {
+    fetchCustomers()
+    fetchProducts()
+  }
+}, { immediate: true })
 
 // Búsqueda de clientes
 const customerSearch = ref('')
@@ -90,11 +98,6 @@ const saveOrder = async () => {
     alert('Error al crear el pedido')
   }
 }
-
-onMounted(() => {
-  fetchCustomers()
-  fetchProducts()
-})
 </script>
 
 <template>

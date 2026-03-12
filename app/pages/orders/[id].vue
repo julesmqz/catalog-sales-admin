@@ -7,6 +7,7 @@ definePageMeta({
 
 const route = useRoute()
 const { getById, updateStatus, isLoading, error } = useOrders()
+const { tenantId } = useAuth()
 const order = ref<Order | null>(null)
 const selectedStatus = ref<OrderStatus>('pending')
 
@@ -35,6 +36,10 @@ const fetchOrder = async () => {
   }
 }
 
+watch(tenantId, (newId) => {
+  if (newId) fetchOrder()
+}, { immediate: true })
+
 const handleUpdateStatus = async () => {
   if (!order.value) return
   try {
@@ -54,8 +59,6 @@ const formatDate = (timestamp: any) => {
     timeStyle: 'short'
   }).format(date)
 }
-
-onMounted(fetchOrder)
 </script>
 
 <template>

@@ -5,7 +5,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { orders, getAll, isLoading, error } = useOrders()
+const { orders, getAll, isLoading: isOrdersLoading, error } = useOrders()
+const { tenantId } = useAuth()
 const filterStatus = ref<OrderStatus | 'all'>('all')
 const selectedOrderIds = ref<string[]>([])
 
@@ -36,6 +37,10 @@ const filteredOrders = computed(() => {
   if (filterStatus.value === 'all') return result
   return result.filter(order => order.status === filterStatus.value)
 })
+
+watch(tenantId, (newId) => {
+  if (newId) getAll()
+}, { immediate: true })
 
 const isAllSelected = computed(() => {
   return filteredOrders.value.length > 0 && filteredOrders.value.every(order => selectedOrderIds.value.includes(order.id))
@@ -82,8 +87,6 @@ const formatDate = (timestamp: any) => {
     year: 'numeric'
   }).format(date).replace('.', '')
 }
-
-onMounted(getAll)
 </script>
 
 <template>

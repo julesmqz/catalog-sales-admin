@@ -5,16 +5,18 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { user } = useAuth()
+const { user, tenantId } = useAuth()
 const { orders, getAll: getOrders, isLoading: loadingOrders } = useOrders()
 const { products, getAll: getProducts } = useProducts()
 const { customers, getAll: getCustomers } = useCustomers()
 
-onMounted(() => {
-  getOrders()
-  getProducts()
-  getCustomers()
-})
+watch(tenantId, (newId) => {
+  if (newId) {
+    getOrders()
+    getProducts()
+    getCustomers()
+  }
+}, { immediate: true })
 
 const stats = computed(() => {
   const counts = {

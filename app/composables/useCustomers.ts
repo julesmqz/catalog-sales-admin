@@ -13,7 +13,7 @@ import {
 
 export interface Customer {
   id?: string
-  userId: string
+  tenantId: string
   name: string
   phone: string
   address?: string
@@ -23,19 +23,19 @@ export interface Customer {
 
 export const useCustomers = () => {
   const { $db } = useNuxtApp()
-  const { user } = useAuth()
+  const { tenantId } = useAuth()
   const customers = ref<Customer[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   const getAll = async () => {
-    if (!user.value) return
+    if (!tenantId.value) return
     isLoading.value = true
     error.value = null
     try {
       const q = query(
         collection($db, 'customers'), 
-        where('userId', '==', user.value.uid),
+        where('tenantId', '==', tenantId.value),
         orderBy('createdAt', 'desc')
       )
       const querySnapshot = await getDocs(q)
@@ -51,13 +51,13 @@ export const useCustomers = () => {
     }
   }
 
-  const create = async (data: Omit<Customer, 'id' | 'userId' | 'createdAt'>) => {
-    if (!user.value) throw new Error('User not authenticated')
+  const create = async (data: Omit<Customer, 'id' | 'tenantId' | 'createdAt'>) => {
+    if (!tenantId.value) throw new Error('Tenant not identified')
     isLoading.value = true
     try {
       const newCustomer: Omit<Customer, 'id'> = {
         ...data,
-        userId: user.value.uid,
+        tenantId: tenantId.value,
         createdAt: Timestamp.now()
       }
       const docRef = await addDoc(collection($db, 'customers'), newCustomer)
@@ -70,7 +70,7 @@ export const useCustomers = () => {
     }
   }
 
-  const update = async (id: string, data: Partial<Omit<Customer, 'id' | 'userId' | 'createdAt'>>) => {
+  const update = async (id: string, data: Partial<Omit<Customer, 'id' | 'tenantId' | 'createdAt'>>) => {
     isLoading.value = true
     try {
       const docRef = doc($db, 'customers', id)

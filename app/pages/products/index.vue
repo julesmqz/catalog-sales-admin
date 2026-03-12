@@ -3,7 +3,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { products, isLoading, error, getAll, create, remove, update } = useProducts()
+const { products, isLoading: isProductsLoading, error, getAll, create, remove, update } = useProducts()
+const { tenantId } = useAuth()
 
 const searchQuery = ref('')
 
@@ -15,9 +16,9 @@ const filteredProducts = computed(() => {
   )
 })
 
-onMounted(() => {
-  getAll()
-})
+watch(tenantId, (newId) => {
+  if (newId) getAll()
+}, { immediate: true })
 
 const isDialogOpen = ref(false)
 const isEditing = ref(false)
@@ -101,7 +102,7 @@ const handleDelete = async (id: string) => {
       </div>
     </div>
 
-    <div v-if="isLoading" class="text-center py-10 text-gray-500">
+    <div v-if="isProductsLoading || !tenantId" class="text-center py-10 text-gray-500">
       Cargando productos...
     </div>
 
